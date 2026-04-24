@@ -138,6 +138,18 @@ class _ResultsPageState extends State<ResultsPage> {
         '3rd',
         'prize3',
       ]),
+      specialPrizes: _readStringList(json, const [
+        'specialPrizes',
+        'special_prizes',
+        'special',
+        'specials',
+      ]),
+      consolationPrizes: _readStringList(json, const [
+        'consolationPrizes',
+        'consolation_prizes',
+        'consolation',
+        'consolations',
+      ]),
       date: _readString(json, const [
         'date',
         'drawDate',
@@ -172,6 +184,28 @@ class _ResultsPageState extends State<ResultsPage> {
     }
 
     return fallback;
+  }
+
+  List<String> _readStringList(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+
+      if (value is List) {
+        return value
+            .where((item) => item != null)
+            .map((item) => item.toString())
+            .toList();
+      }
+
+      if (value is Map) {
+        return value.values
+            .where((item) => item != null)
+            .map((item) => item.toString())
+            .toList();
+      }
+    }
+
+    return const [];
   }
 
   String _normalizeKey(String value) {
@@ -342,6 +376,13 @@ class _ResultTab extends StatelessWidget {
         _PrizeCard(label: 'Second Prize', number: result.secondPrize),
         const SizedBox(height: 12),
         _PrizeCard(label: 'Third Prize', number: result.thirdPrize),
+        const SizedBox(height: 16),
+        _NumberGridCard(label: 'Special', numbers: result.specialPrizes),
+        const SizedBox(height: 16),
+        _NumberGridCard(
+          label: 'Consolation',
+          numbers: result.consolationPrizes,
+        ),
       ],
     );
   }
@@ -379,6 +420,87 @@ class _PrizeCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NumberGridCard extends StatelessWidget {
+  const _NumberGridCard({required this.label, required this.numbers});
+
+  final String label;
+  final List<String> numbers;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final visibleNumbers = numbers.take(10).toList();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: visibleNumbers.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.8,
+              ),
+              itemBuilder: (context, index) {
+                return _NumberTile(number: visibleNumbers[index]);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NumberTile extends StatelessWidget {
+  const _NumberTile({required this.number});
+
+  final String number;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              number,
+              maxLines: 1,
+              style: textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ),
       ),
     );
